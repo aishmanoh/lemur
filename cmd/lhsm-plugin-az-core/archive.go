@@ -58,7 +58,8 @@ func Archive(o ArchiveOptions) (int64, error) {
 		meta := azblob.Metadata{}
 
 		//Get owner, group and perms
-		dir, err := os.Open(path.Join(dirPath, currDir))
+		dirPath = path.Join(dirPath, currDir)
+		dir, err := os.Open(dirPath)
 		if err != nil {
 			util.Log(pipeline.LogError, fmt.Sprintf("Archiving %s. Failed to get Access Control: %s", o.BlobName, err.Error()))
 			return 0, err
