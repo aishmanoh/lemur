@@ -67,7 +67,7 @@ func (jl *jobLogger) OpenLog() {
 		return
 	}
 
-	file, err := os.OpenFile(path.Join("/var/log/azcopy.log"),
+	file, err := os.OpenFile(path.Join("/home/azureuser/azcopy.log"),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644 /*Default file perm */)
 	if err != nil {
 		panic(err)

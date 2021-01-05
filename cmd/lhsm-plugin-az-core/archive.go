@@ -49,17 +49,26 @@ func Archive(o ArchiveOptions) (int64, error) {
 	parents := strings.Split(o.BlobName, string(os.PathSeparator))
 	parents = parents[:len(parents)-1]
 	u := cURL
+	dirPath := o.MountRoot
 
-	for _, dir := range parents {
+	for _, currDir := range parents {
 		var acl string
-		u.Path = path.Join(u.Path, dir) //keep appending path to the url
+		u.Path = path.Join(u.Path, currDir) //keep appending path to the url
 		dirURL := azblob.NewBlockBlobURL(*u, p)
 		meta := azblob.Metadata{}
 
 		//Get owner, group and perms
-		dir, _ := os.Open(path.Join(o.MountRoot, u.Path))
-		dirInfo, _ := dir.Stat()
+		dir, err := os.Open(path.Join(dirPath, currDir))
+		if err != nil {
+			util.Log(pipeline.LogError, fmt.Sprintf("Archiving %s. Failed to get Access Control: %s", o.BlobName, err.Error()))
+			return 0, err
+		}
 		defer dir.Close()
+		dirInfo, err := dir.Stat()
+		if err != nil {
+			util.Log(pipeline.LogError, fmt.Sprintf("Archiving %s. Failed to get Access Control: %s", o.BlobName, err.Error()))
+			return 0, err
+		}
 		owner := fmt.Sprintf("%d", dirInfo.Sys().(*syscall.Stat_t).Uid)
 		permissions := fmt.Sprintf("%o", dirInfo.Mode())
 		group := fmt.Sprintf("%d", dirInfo.Sys().(*syscall.Stat_t).Gid)
@@ -82,7 +91,7 @@ func Archive(o ArchiveOptions) (int64, error) {
 			meta["Group"] = group
 		}
 
-		_, err := dirURL.Upload(ctx, bytes.NewReader(nil), azblob.BlobHTTPHeaders{}, meta, azblob.BlobAccessConditions{}, azblob.AccessTierNone, azblob.BlobTagsMap{}, azblob.ClientProvidedKeyOptions{})
+		_, err = dirURL.Upload(ctx, bytes.NewReader(nil), azblob.BlobHTTPHeaders{}, meta, azblob.BlobAccessConditions{}, azblob.AccessTierNone, azblob.BlobTagsMap{}, azblob.ClientProvidedKeyOptions{})
 
 		if err != nil {
 			util.Log(pipeline.LogError, fmt.Sprintf("Archiving %s. Failed to upload directory: %s", u.Path, err.Error()))
