@@ -40,7 +40,7 @@ func Restore(o RestoreOptions) (int64, error) {
 	util.Log(pipeline.LogInfo, fmt.Sprintf("Restoring %s to %s.", u.String(), o.DestinationPath))
 
 	blobURL := azblob.NewBlobURL(*u, p)
-	blobProp, err := blobURL.GetProperties(ctx, azblob.BlobAccessConditions{})
+	blobProp, err := blobURL.GetProperties(ctx, azblob.BlobAccessConditions{}, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
 		return 0, errors.Wrapf(err, "GetProperties on %s failed", o.BlobName)
 	}
