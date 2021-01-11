@@ -32,7 +32,9 @@ func Restore(o RestoreOptions) (int64, error) {
 	ctx, cancel := context.WithCancel(restoreCtx)
 	defer cancel()
 
-	p := util.NewPipeline(ctx, o.Credential, o.Pacer, azblob.PipelineOptions{})
+	p := util.NewPipeline(ctx, o.Credential, o.Pacer, azblob.PipelineOptions{
+		Log: pipeline.LogOptions{Log: util.Log,
+			ShouldLog: func(_ pipeline.LogLevel) bool { return true }}})
 	blobPath := path.Join(o.ContainerName, o.ExportPrefix, o.BlobName)
 
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s%s", o.AccountName, blobPath, o.ResourceSAS))
